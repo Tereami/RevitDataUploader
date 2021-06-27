@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>RevitDataUploader</Name>
+    <Assembly>
+      C:\Users\Alexander\source\repos\RevitDataUploader\RevitDataUploader\bin\Debug\RevitDataUploader.dll
+    </Assembly>
+    <ClientId>59dc8bdb-898e-496e-a2fc-90f006b5096d</ClientId>
+    <FullClassName>RevitDataUploader.App</FullClassName>
+    <VendorId>IP Zuyev A</VendorId>
+    <VendorDescription>https://bim-starter.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>
