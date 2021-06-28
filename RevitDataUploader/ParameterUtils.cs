@@ -51,7 +51,7 @@ namespace RevitDataUploader
                     val = param.AsInteger().ToString();
                     break;
                 case StorageType.Double:
-                    val = UnitUtils.ConvertFromInternalUnits(param.AsDouble(), param.DisplayUnitType).ToString("F3");
+                    val = UnitUtils.ConvertFromInternalUnits(param.AsDouble(), param.DisplayUnitType).ToString("0.###");
                     break;
                 case StorageType.String:
                     val = param.AsString();
@@ -82,13 +82,13 @@ namespace RevitDataUploader
             {
                 Parameter lengthParam = elem.get_Parameter(BuiltInParameter.STRUCTURAL_FRAME_CUT_LENGTH);
                 if (lengthParam == null || !lengthParam.HasValue)
-                    lengthParam = elem.LookupParameter(Configuration.BeamTrueLength);
+                    lengthParam = elem.SuperGetParameter(Configuration.BeamTrueLength);
                 if (lengthParam == null || !lengthParam.HasValue)
                     lengthParam = elem.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM);
                 if (lengthParam == null || !lengthParam.HasValue)
                     lengthParam = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH);
                 if (lengthParam == null || !lengthParam.HasValue)
-                    lengthParam = elem.LookupParameter(Configuration.Length);
+                    lengthParam = elem.SuperGetParameter(Configuration.Length);
                 if (lengthParam != null && lengthParam.HasValue)
                 {
                     length = lengthParam.AsDouble();

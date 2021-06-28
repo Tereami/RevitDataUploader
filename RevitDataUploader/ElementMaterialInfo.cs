@@ -104,7 +104,7 @@ namespace RevitDataUploader
             }
             else if (armClass < 0)
             {
-                FullName += "_" + e.SuperGetParameter(Configuration.ElementName);
+                FullName += "_" + e.GetParameterValAsString(Configuration.ElementName);
                 string profileName = e.GetParameterValAsString("Мрк.НаименованиеСоставноеТекст1");
                 if (profileName.Length > 1)
                 {
@@ -121,20 +121,18 @@ namespace RevitDataUploader
             string assemblyMark = e.GetParameterValAsString(Configuration.AssemblyMark);
             if (assemblyMark.Contains("-"))
             {
-                Parameter rebarUseTypeParam = e.SuperGetParameter(Configuration.RebarUseType);
-                if (rebarUseTypeParam == null || !rebarUseTypeParam.HasValue)
-                {
-                    throw new Exception("В арматуре не задан параметр Орг.ИзделиеТипПодсчета");
-                }
-                int rebarUseType = rebarUseTypeParam.AsInteger();
-                if(rebarUseType == 4 || rebarUseType == 5)
-                {
-                    FullName += " в составе закладной детали " + assemblyMark;
-                }
-                else
-                {
-                    FullName += " в составе арматурного изделия " + assemblyMark;
-                }
+                FullName += " в составе " + assemblyMark;
+            }
+
+            Parameter rebarUseTypeParam = e.SuperGetParameter(Configuration.RebarUseType);
+            if (rebarUseTypeParam == null || !rebarUseTypeParam.HasValue)
+            {
+                throw new Exception("В арматуре не задан параметр " + Configuration.RebarUseType);
+            }
+            int rebarUseType = rebarUseTypeParam.AsInteger();
+            if (rebarUseType == 4 || rebarUseType == 5)
+            {
+                FullName += "_Закладные";
             }
 
             double weight = RebarUtils.GetRebarWeight(this.ElemInfo, armClass);

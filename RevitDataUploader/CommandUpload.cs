@@ -119,9 +119,18 @@ namespace RevitDataUploader
             System.Xml.Serialization.XmlSerializer serializer = 
                 new System.Xml.Serialization.XmlSerializer(typeof(List<ElementMaterialInfo>));
 
-            string xmlFilename = DateTime.Now.ToString().Replace(':', ' ') + ".xml";
+            System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
+            dialog.FileName = doc.Title + "_" + DateTime.Now.ToString().Replace(':', ' ') + ".xml";
+            dialog.Filter = "XML files|*.xml";
 
-            using (StreamWriter writer = new StreamWriter(@"C:\revitupload\" + xmlFilename))
+            if(dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return Result.Cancelled;
+            }
+
+            string xmlFilename = dialog.FileName;
+
+            using (StreamWriter writer = new StreamWriter(xmlFilename))
             {
                 serializer.Serialize(writer, elemMaterials);
             }
