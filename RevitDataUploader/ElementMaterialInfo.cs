@@ -38,7 +38,16 @@ namespace RevitDataUploader
         public ElementMaterialInfo(ElementInfo einfo)
         {
             ElemInfo = einfo;
-            FullName = einfo.ConstructionName + "_" + einfo.RevitElementName + "_" + einfo.RevitTypeName;
+            FullName = einfo.ConstructionName;
+            
+            if(einfo.Group == ElementGroup.Rebar)
+            {
+                FullName += "_Арматура ";
+            }
+            else
+            {
+                FullName += "_" + einfo.RevitElementName + "_" + einfo.RevitTypeName;
+            }
         }
 
         public void ApplyMaterial(MaterialInfo matinfo)
@@ -89,10 +98,8 @@ namespace RevitDataUploader
             long armClass = (long)classParam.AsDouble();
             if (armClass > 0)
             {
-                FullName += "_Арматура";
                 double diam = (double)ElemInfo.Diameter;
-                double diameterMm = UnitUtils.ConvertFromInternalUnits(diam, DisplayUnitType.DUT_MILLIMETERS);
-                FullName += " d" + diameterMm.ToString("F0");
+                FullName += " d" + diam.ToString("F0");
                 FullName += " А" + armClass.ToString();
             }
             else if (armClass < 0)

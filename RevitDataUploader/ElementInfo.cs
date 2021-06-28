@@ -30,7 +30,7 @@ namespace RevitDataUploader
 
         [System.Xml.Serialization.XmlIgnore]
         public Element RevitElement { get; set; }
-        public ElementGroup ElementType { get; set; }
+        public ElementGroup Group { get; set; }
 
         public string RevitElementName { get; set; }
         public string RevitTypeName { get; set; }
@@ -46,7 +46,7 @@ namespace RevitDataUploader
         public string PlacementOrGroup { get; set; }
         public string Category { get; set; }
 
-        List<CustomParameter> CustomParameters;
+        public List<CustomParameter> CustomParameters = new List<CustomParameter>();
 
         public ElementInfo()
         {
@@ -69,21 +69,21 @@ namespace RevitDataUploader
 
 
             if (bic == BuiltInCategory.OST_Rebar)
-                ElementType = ElementGroup.Rebar;
+                Group = ElementGroup.Rebar;
             else if (elem is RoofBase)
-                ElementType = ElementGroup.Isolation;
+                Group = ElementGroup.Isolation;
             else if (elem is FamilyInstance)
             {
                 FamilyInstance fi = elem as FamilyInstance;
                 Parameter metalGroupConstr = fi.SuperGetParameter(Configuration.MetalGroupConstr);
                 if (metalGroupConstr != null && metalGroupConstr.HasValue)
-                    ElementType = ElementGroup.Metal;
+                    Group = ElementGroup.Metal;
 
                 if (fi.Symbol.FamilyName.StartsWith("222"))
-                    ElementType = ElementGroup.Isolation;
+                    Group = ElementGroup.Isolation;
             }
             else
-                ElementType = ElementGroup.Concrete;
+                Group = ElementGroup.Concrete;
 
             Mark = elem.GetMark();
             ConstructionName = ParameterUtils.GetConstructionByMark(Mark);

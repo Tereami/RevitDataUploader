@@ -81,13 +81,13 @@ namespace RevitDataUploader
             else
             {
                 Parameter lengthParam = elem.get_Parameter(BuiltInParameter.STRUCTURAL_FRAME_CUT_LENGTH);
-                if (lengthParam == null)
+                if (lengthParam == null || !lengthParam.HasValue)
                     lengthParam = elem.LookupParameter(Configuration.BeamTrueLength);
-                if (lengthParam == null)
+                if (lengthParam == null || !lengthParam.HasValue)
                     lengthParam = elem.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM);
-                if (lengthParam == null)
+                if (lengthParam == null || !lengthParam.HasValue)
                     lengthParam = elem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH);
-                if (lengthParam == null)
+                if (lengthParam == null || !lengthParam.HasValue)
                     lengthParam = elem.LookupParameter(Configuration.Length);
                 if (lengthParam != null && lengthParam.HasValue)
                 {
@@ -98,7 +98,9 @@ namespace RevitDataUploader
             if (length < 0.001) return 0;
 
             double lengthMeters0 = UnitUtils.ConvertFromInternalUnits(length, DisplayUnitType.DUT_METERS);
-            double lengthMetersRound = Math.Round(lengthMeters0, 6);
+            double lengthMm = lengthMeters0 * 1000;
+            double lengthMmRound5 = 5 * Math.Round(lengthMm / 5, MidpointRounding.AwayFromZero);
+            double lengthMetersRound = lengthMmRound5 / 1000;
             return lengthMetersRound;
         }
 
@@ -113,7 +115,9 @@ namespace RevitDataUploader
             else
             {
                 double diameter = diamParam.AsDouble();
-                return diameter;
+                double diamMm = UnitUtils.ConvertFromInternalUnits(diameter, DisplayUnitType.DUT_MILLIMETERS);
+                diamMm = Math.Round(diamMm);
+                return diamMm;
             }
         }
 

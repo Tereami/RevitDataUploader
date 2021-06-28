@@ -25,8 +25,7 @@ namespace RevitDataUploader
 {
     public class CustomParameterData
     {
-        public string ParameterName;
-        public string ParameterValue;
+        public CustomParameter customParam;
         public View3D View;
         public IEnumerable<Element> Elements;
 
@@ -53,8 +52,8 @@ namespace RevitDataUploader
 
                 string splitName = view.Name.Split('_').Last();
                 string[] splitParam = splitName.Split('=');
-                customdata.ParameterName = splitParam[0];
-                customdata.ParameterValue = splitParam[1];
+
+                customdata.customParam = new CustomParameter( splitParam[0], splitParam[1]);
 
                 customdata.Elements = new FilteredElementCollector(doc, view.Id)
                     .WhereElementIsNotElementType();

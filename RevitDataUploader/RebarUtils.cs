@@ -33,7 +33,7 @@ namespace RevitDataUploader
 
             double count = einfo.Count;
             double diameterMm = (double)einfo.Diameter;
-            double lengthMm = (double)einfo.Length;
+            double lengthMm = (double)einfo.Length * 1000;
 
             double WeightPerMeter = 0;
 
@@ -106,7 +106,8 @@ namespace RevitDataUploader
             double wf4 = wf3 * 0.01;
             double wf5 = Math.Round(wf4, MidpointRounding.AwayFromZero);
             double wf6 = 0.01 * wf5;
-            double weightFinal = wf6;
+            double wf7 = Math.Round(wf6, 3);
+            double weightFinal = wf7;
 
             return weightFinal;
         }

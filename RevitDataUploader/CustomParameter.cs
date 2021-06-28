@@ -22,7 +22,18 @@ namespace RevitDataUploader
 {
     public class CustomParameter
     {
-        public string Name;
-        public string Value;
+        public string Name { get; set; }
+        public string Value { get; set; }
+
+        public CustomParameter()
+        {
+            //пустой конструктор для сериализатора
+        }
+
+        public CustomParameter(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
     }
 }

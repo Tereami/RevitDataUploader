@@ -34,7 +34,7 @@ namespace RevitDataUploader
 
             View3D mainView = doc.GetMain3dView();
 
-            List<CustomParameterData> customParamsData = CustomParameterData.GetCustomParamsData(doc);
+            
 
             Dictionary<int, ElementInfo> elementsBase = new Dictionary<int, ElementInfo>();
 
@@ -51,19 +51,46 @@ namespace RevitDataUploader
                 elementsBase.Add(constr.Id.IntegerValue, einfo);
             }
 
+            IEnumerable<Element> rebars = doc.GetRebars();
+            foreach(Element rebar in rebars)
+            {
+                ElementInfo einfo = new ElementInfo(rebar);
+                if (!einfo.IsValid)
+                {
+                    System.Diagnostics.Debug.WriteLine("Invalid element " + rebar.Id.IntegerValue.ToString());
+                    continue;
+                }
+
+                elementsBase.Add(rebar.Id.IntegerValue, einfo);
+            }
+
+            List<CustomParameterData> customParamsData = CustomParameterData.GetCustomParamsData(doc);
+            foreach(CustomParameterData cpdata in customParamsData)
+            {
+                CustomParameter cp = cpdata.customParam;
+                foreach(Element elem in cpdata.Elements)
+                {
+                    int elemId = elem.Id.IntegerValue;
+                    if(elementsBase.ContainsKey(elemId))
+                    {
+                        elementsBase[elemId].CustomParameters.Add(cp);
+                    }
+                }
+            }
+
             List<ElementMaterialInfo> elemMaterials = new List<ElementMaterialInfo>();
 
             foreach(var kvp in elementsBase)
             {
                 ElementInfo einfo = kvp.Value;
 
-                if (einfo.ElementType == ElementGroup.Rebar)
+                if (einfo.Group == ElementGroup.Rebar)
                 {
                     ElementMaterialInfo elemMaterial = new ElementMaterialInfo(einfo);
                     elemMaterial.ApplyRebar();
                     elemMaterials.Add(elemMaterial);
                 }
-                else if (einfo.ElementType is ElementGroup.Metal)
+                else if (einfo.Group is ElementGroup.Metal)
                 {
                     ElementMaterialInfo elemMaterial = new ElementMaterialInfo(einfo);
                     elemMaterial.ApplyMetal();
