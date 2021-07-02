@@ -20,20 +20,22 @@ using System.Threading.Tasks;
 
 namespace RevitDataUploader
 {
-    public class CustomParameter
+    public class ParameterInfo
     {
         public string Name { get; set; }
         public string Value { get; set; }
+        public string Units { get; set; }
 
-        public CustomParameter()
+        public ParameterInfo()
         {
             //пустой конструктор для сериализатора
         }
 
-        public CustomParameter(string name, string value)
+        public ParameterInfo(string name, string value, string units = "")
         {
             Name = name;
             Value = value;
+            Units = units;
         }
     }
 }

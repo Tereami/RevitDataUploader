@@ -13,6 +13,7 @@ namespace RevitDataUploader
         public const string MaterialCalcType = "О_Материал тип подсчета";
         public const string MaterialName = "Мтрл.Название";
         public const string MaterialNormative = "О_Материал обозначение";
+        public const string Material = "О_Материал";
         
         public const string Length = "Рзм.Длина";
         public const string Diameter = "Рзм.Диаметр";

@@ -46,7 +46,7 @@ namespace RevitDataUploader
         public string PlacementOrGroup { get; set; }
         public string Category { get; set; }
 
-        public List<CustomParameter> CustomParameters = new List<CustomParameter>();
+        public List<ParameterInfo> CustomParameters = new List<ParameterInfo>();
 
         public ElementInfo()
         {

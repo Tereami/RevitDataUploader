@@ -17,6 +17,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
 using System.IO;
 #endregion
 
@@ -84,12 +85,10 @@ namespace RevitDataUploader
             Quantity = Math.Round(Quantity, 6);
         }
 
-        public void ApplyRebar()
+        public void ApplyRebar(Dictionary<int, MaterialInfo> materialsBase)
         {
             Element e = ElemInfo.RevitElement;
-            MaterialInfo rebarMaterial = new MaterialInfo();
-            
-            //rebarMaterial.Name;
+            MatInfo = new MaterialInfo();
 
             Parameter classParam = e.SuperGetParameter(Configuration.RebarClass);
             if (classParam == null || !classParam.HasValue)
@@ -132,13 +131,13 @@ namespace RevitDataUploader
             int rebarUseType = rebarUseTypeParam.AsInteger();
             if (rebarUseType == 4 || rebarUseType == 5)
             {
-                FullName += "_Закладные";
+                FullName += " (закладные)";
             }
 
             double weight = RebarUtils.GetRebarWeight(this.ElemInfo, armClass);
 
             this.Quantity = weight;
-            rebarMaterial.Units = "кг";
+            MatInfo.Units = "кг";
         }
 
         public void ApplyMetal()

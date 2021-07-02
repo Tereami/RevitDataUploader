@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System.IO;
+using Newtonsoft.Json;
 #endregion
 
 namespace RevitDataUploader
@@ -34,7 +35,7 @@ namespace RevitDataUploader
 
             View3D mainView = doc.GetMain3dView();
 
-            
+
 
             Dictionary<int, ElementInfo> elementsBase = new Dictionary<int, ElementInfo>();
 
@@ -42,7 +43,7 @@ namespace RevitDataUploader
             foreach (Element constr in constructions)
             {
                 ElementInfo einfo = new ElementInfo(constr);
-                if(!einfo.IsValid)
+                if (!einfo.IsValid)
                 {
                     System.Diagnostics.Debug.WriteLine("Invalid element " + constr.Id.IntegerValue.ToString());
                     continue;
@@ -52,7 +53,7 @@ namespace RevitDataUploader
             }
 
             IEnumerable<Element> rebars = doc.GetRebars();
-            foreach(Element rebar in rebars)
+            foreach (Element rebar in rebars)
             {
                 ElementInfo einfo = new ElementInfo(rebar);
                 if (!einfo.IsValid)
@@ -65,13 +66,13 @@ namespace RevitDataUploader
             }
 
             List<CustomParameterData> customParamsData = CustomParameterData.GetCustomParamsData(doc);
-            foreach(CustomParameterData cpdata in customParamsData)
+            foreach (CustomParameterData cpdata in customParamsData)
             {
-                CustomParameter cp = cpdata.customParam;
-                foreach(Element elem in cpdata.Elements)
+                ParameterInfo cp = cpdata.customParam;
+                foreach (Element elem in cpdata.Elements)
                 {
                     int elemId = elem.Id.IntegerValue;
-                    if(elementsBase.ContainsKey(elemId))
+                    if (elementsBase.ContainsKey(elemId))
                     {
                         elementsBase[elemId].CustomParameters.Add(cp);
                     }
@@ -80,14 +81,14 @@ namespace RevitDataUploader
 
             List<ElementMaterialInfo> elemMaterials = new List<ElementMaterialInfo>();
 
-            foreach(var kvp in elementsBase)
+            foreach (var kvp in elementsBase)
             {
                 ElementInfo einfo = kvp.Value;
 
                 if (einfo.Group == ElementGroup.Rebar)
                 {
                     ElementMaterialInfo elemMaterial = new ElementMaterialInfo(einfo);
-                    elemMaterial.ApplyRebar();
+                    elemMaterial.ApplyRebar(materialsBase);
                     elemMaterials.Add(elemMaterial);
                 }
                 else if (einfo.Group is ElementGroup.Metal)
@@ -116,24 +117,44 @@ namespace RevitDataUploader
                 }
             }
 
-            System.Xml.Serialization.XmlSerializer serializer = 
-                new System.Xml.Serialization.XmlSerializer(typeof(List<ElementMaterialInfo>));
-
-            System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
-            dialog.FileName = doc.Title + "_" + DateTime.Now.ToString().Replace(':', ' ') + ".xml";
-            dialog.Filter = "XML files|*.xml";
-
-            if(dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-            {
+            FormSettings form = new FormSettings();
+            if (form.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 return Result.Cancelled;
-            }
 
-            string xmlFilename = dialog.FileName;
+            UploadFormat format = form.UploadFormat;
+            string fileExtens = Enum.GetName(typeof(UploadFormat), format).ToLower();
+            System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
+            dialog.FileName = doc.Title + "_" + DateTime.Now.ToString().Replace(':', ' ') + "." + fileExtens;
+            dialog.Filter = fileExtens + " files|*." + fileExtens;
 
-            using (StreamWriter writer = new StreamWriter(xmlFilename))
+            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                return Result.Cancelled;
+
+            string filename = dialog.FileName;
+
+
+            if (format == UploadFormat.XML)
             {
-                serializer.Serialize(writer, elemMaterials);
+                using (StreamWriter writer = new StreamWriter(filename))
+                {
+                    System.Xml.Serialization.XmlSerializer serializer =
+                        new System.Xml.Serialization.XmlSerializer(typeof(List<ElementMaterialInfo>));
+
+                    serializer.Serialize(writer, elemMaterials);
+                }
             }
+            else if (format == UploadFormat.JSON)
+            {
+                List<ItemInfo> infos = elemMaterials.Select(i => new ItemInfo(i)).ToList();
+
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Formatting = Formatting.Indented;
+                using (StreamWriter writer = new StreamWriter(filename))
+                {
+                    serializer.Serialize(writer, infos);
+                }
+            }
+
 
             TaskDialog.Show("Info", "Выгружено элементов: " + elemMaterials.Count.ToString());
             return Result.Succeeded;
