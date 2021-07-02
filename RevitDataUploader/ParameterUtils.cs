@@ -139,18 +139,22 @@ namespace RevitDataUploader
 
         public static string GetMark(this Element elem)
         {
-            if (elem is Rebar || elem is RebarInSystem)
+            int rebarCatId = new ElementId(BuiltInCategory.OST_Rebar).IntegerValue;
+            if (elem.Category.Id.IntegerValue == rebarCatId)
             {
-                string mark = elem.get_Parameter(BuiltInParameter.REBAR_ELEM_HOST_MARK).AsString();
-                return mark;
-            }
-            else
-            {
-                Parameter myMarkParam = elem.SuperGetParameter(Configuration.Mark);
-                if (myMarkParam != null && myMarkParam.HasValue)
+                if (elem is Rebar || elem is RebarInSystem)
                 {
-                    string mark = myMarkParam.AsString();
+                    string mark = elem.get_Parameter(BuiltInParameter.REBAR_ELEM_HOST_MARK).AsString();
                     return mark;
+                }
+                else
+                {
+                    Parameter myMarkParam = elem.SuperGetParameter(Configuration.Mark);
+                    if (myMarkParam != null && myMarkParam.HasValue)
+                    {
+                        string mark = myMarkParam.AsString();
+                        return mark;
+                    }
                 }
             }
 
