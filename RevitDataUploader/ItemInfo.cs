@@ -50,8 +50,8 @@ namespace RevitDataUploader
             ps.Add(new ParameterInfo("RevitTypeName", emi.ElemInfo.RevitTypeName));
             ps.Add(new ParameterInfo("RevitElementNormative", emi.ElemInfo.RevitElementNormative));
             ps.Add(new ParameterInfo("RevitUniqueElementId", emi.ElemInfo.RevitUniqueElementId));
-            ps.Add(new ParameterInfo("Length", emi.ElemInfo.Length.ToString(), "м"));
-            ps.Add(new ParameterInfo("Diameter", emi.ElemInfo.Diameter.ToString(), "мм"));
+            ps.Add(new ParameterInfo("LengthMeters", emi.ElemInfo.Length.ToString()));
+            ps.Add(new ParameterInfo("DiameterMm", emi.ElemInfo.Diameter.ToString()));
             ps.Add(new ParameterInfo("Count", emi.ElemInfo.Count.ToString()));
             ps.Add(new ParameterInfo("Mark", emi.ElemInfo.Mark));
             ps.Add(new ParameterInfo("ConstructionName", emi.ElemInfo.ConstructionName));

@@ -24,18 +24,16 @@ namespace RevitDataUploader
     {
         public string Name { get; set; }
         public string Value { get; set; }
-        public string Units { get; set; }
 
         public ParameterInfo()
         {
             //пустой конструктор для сериализатора
         }
 
-        public ParameterInfo(string name, string value, string units = "")
+        public ParameterInfo(string name, string value)
         {
             Name = name;
             Value = value;
-            Units = units;
         }
     }
 }
