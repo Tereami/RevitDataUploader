@@ -60,5 +60,12 @@ namespace RevitDataUploader
             { "ПРм", "Парапет монолитный"}
         };
 
+
+        public static List<string> genericModelPrefixes = new List<string>
+        {
+            "222",
+            "230",
+            "231"
+        };
     }
 }

@@ -36,6 +36,17 @@ namespace RevitDataUploader
             return param;
         }
 
+        public static string GetParameterName(this Parameter p)
+        {
+            string name = p.Definition.Name;
+            InternalDefinition intdef = p.Definition as InternalDefinition;
+            if(intdef.BuiltInParameter != BuiltInParameter.INVALID)
+            {
+                name = Enum.GetName(typeof(BuiltInParameter), intdef.BuiltInParameter);
+            }
+            return name;
+        }
+
         public static string GetParameterValAsString(this Element e, string paramName, string prefix = "")
         {
             Parameter param = e.SuperGetParameter(paramName);
@@ -57,7 +68,7 @@ namespace RevitDataUploader
                     val = param.AsString();
                     break;
                 case StorageType.ElementId:
-                    val = param.AsElementId().IntegerValue.ToString();
+                    val = param.AsValueString();
                     break;
             }
             if (string.IsNullOrEmpty(val))

@@ -32,6 +32,9 @@ namespace RevitDataUploader
         public MaterialCalcType CalcType { get; set; }
         public string Normative { get; set; }
         public string Units { get; set; }
+        public double Area { get; set; }
+        public double Volume { get; set; }
+        public bool IsPaint { get; set; }
 
         public MaterialInfo()
         {
@@ -59,41 +62,38 @@ namespace RevitDataUploader
                 info.Normative = e.GetParameterValAsString(Configuration.MaterialNormative);
 
                 Parameter calcTypeParam = e.LookupParameter(Configuration.MaterialCalcType);
-                if (calcTypeParam == null || !calcTypeParam.HasValue)
-                    continue;
-
-                int calcTypeInt = calcTypeParam.AsInteger();
-
-                if (calcTypeInt < 0)
+                if (calcTypeParam != null && calcTypeParam.HasValue)
                 {
-                    continue;
-                }
-                switch (calcTypeInt)
-                {
-                    case 0:
-                        info.CalcType = MaterialCalcType.Items;
-                        info.Units = "шт";
-                        break;
-                    case 1:
-                        info.CalcType = MaterialCalcType.Length;
-                        info.Units = "м";
-                        break;
-                    case 2:
-                        info.CalcType = MaterialCalcType.Area;
-                        info.Units = "м²";
-                        break;
-                    case 3:
-                        info.CalcType = MaterialCalcType.Volume;
-                        info.Units = "м³";
-                        break;
-                    case 4:
-                        info.CalcType = MaterialCalcType.Weight;
-                        info.Units = "кг";
-                        break;
-                    default:
-                        continue;
-                }
+                    int calcTypeInt = calcTypeParam.AsInteger();
 
+                    switch (calcTypeInt)
+                    {
+                        case 0:
+                            info.CalcType = MaterialCalcType.Items;
+                            info.Units = "шт";
+                            break;
+                        case 1:
+                            info.CalcType = MaterialCalcType.Length;
+                            info.Units = "м";
+                            break;
+                        case 2:
+                            info.CalcType = MaterialCalcType.Area;
+                            info.Units = "м²";
+                            break;
+                        case 3:
+                            info.CalcType = MaterialCalcType.Volume;
+                            info.Units = "м³";
+                            break;
+                        case 4:
+                            info.CalcType = MaterialCalcType.Weight;
+                            info.Units = "кг";
+                            break;
+                        default:
+                            info.CalcType = MaterialCalcType.None;
+                            info.Units = "";
+                            break;
+                    }
+                }
                 materials.Add(id, info);
             }
             return materials;

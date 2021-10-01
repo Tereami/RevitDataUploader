@@ -35,8 +35,6 @@ namespace RevitDataUploader
 
             View3D mainView = doc.GetMain3dView();
 
-
-
             Dictionary<int, ElementInfo> elementsBase = new Dictionary<int, ElementInfo>();
 
             IEnumerable<Element> constructions = doc.GetConstructions();
@@ -99,64 +97,68 @@ namespace RevitDataUploader
                 }
                 else
                 {
-                    List<ElementId> materialIds = einfo.RevitElement.GetMaterialIds(false).ToList();
+                    Dictionary<bool, List<ElementId>> matids = new Dictionary<bool, List<ElementId>>();
+                    List<ElementId> materialIdsNoPaint = einfo.RevitElement.GetMaterialIds(false).ToList();
+                    List<ElementId> materialIdsPaint = einfo.RevitElement.GetMaterialIds(true).ToList();
+                    matids.Add(false, materialIdsNoPaint);
+                    matids.Add(true, materialIdsPaint);
 
-                    foreach (ElementId matid in materialIds)
+                    foreach(var mat in matids)
                     {
-                        ElementMaterialInfo elemMaterial = new ElementMaterialInfo(einfo);
-                        int matidInt = matid.IntegerValue;
-                        if (!materialsBase.ContainsKey(matidInt))
+                        List<ElementId> curMatIds = mat.Value;
+                        foreach (ElementId matid in curMatIds)
                         {
-                            System.Diagnostics.Debug.WriteLine("No material in base: " + matid);
-                            continue;
+                            ElementMaterialInfo elemMaterial = new ElementMaterialInfo(einfo);
+                            MaterialInfo matinfo = materialsBase[matid.IntegerValue];
+                            if(matinfo.CalcType == MaterialCalcType.None)
+                            {
+                                continue;
+                            }
+                            matinfo.IsPaint = mat.Key;
+                            elemMaterial.ApplyMaterial(matinfo);
+                            elemMaterials.Add(elemMaterial);
                         }
-                        MaterialInfo matinfo = materialsBase[matidInt];
-                        elemMaterial.ApplyMaterial(matinfo);
-                        elemMaterials.Add(elemMaterial);
                     }
                 }
             }
 
-            FormSettings form = new FormSettings();
-            if (form.ShowDialog() != System.Windows.Forms.DialogResult.OK)
-                return Result.Cancelled;
-
-            UploadFormat format = form.UploadFormat;
-            string fileExtens = Enum.GetName(typeof(UploadFormat), format).ToLower();
             System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
-            dialog.FileName = doc.Title + "_" + DateTime.Now.ToString().Replace(':', ' ') + "." + fileExtens;
-            dialog.Filter = fileExtens + " files|*." + fileExtens;
+            dialog.FileName = doc.Title + "_" + DateTime.Now.ToString().Replace(':', ' ') + ".json";
+            dialog.Filter = "JSON files|*.json";
 
             if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 return Result.Cancelled;
 
-            string filename = dialog.FileName;
+            //List<ItemInfo> infos = elemMaterials.Select(i => new ItemInfo(i)).ToList();
 
+            JsonSerializer serializer = new JsonSerializer();
+            serializer.Formatting = Formatting.Indented;
 
-            if (format == UploadFormat.XML)
+            int elementsCount = elemMaterials.Count;
+            string folder = System.IO.Path.GetDirectoryName(dialog.FileName);
+            for(int i = 0; i < elemMaterials.Count; i++)
             {
+                ElementMaterialInfo emi = elemMaterials[i];
+                ItemInfo ii = new ItemInfo(emi);
+                ii.counter = i;
+                ii.totalElements = elementsCount;
+
+                string filename = System.IO.Path.Combine(folder, doc.Title + "_" + emi.ElemInfo.RevitUniqueElementId + ".json");
+
+                int filesCounter = 1;
+                while(System.IO.File.Exists(filename))
+                {
+                    filename = System.IO.Path.Combine(folder, doc.Title + "_" + emi.ElemInfo.RevitUniqueElementId + "_" + filesCounter + ".json");
+                    filesCounter++;
+                }
+                
                 using (StreamWriter writer = new StreamWriter(filename))
                 {
-                    System.Xml.Serialization.XmlSerializer serializer =
-                        new System.Xml.Serialization.XmlSerializer(typeof(List<ElementMaterialInfo>));
-
-                    serializer.Serialize(writer, elemMaterials);
-                }
-            }
-            else if (format == UploadFormat.JSON)
-            {
-                List<ItemInfo> infos = elemMaterials.Select(i => new ItemInfo(i)).ToList();
-
-                JsonSerializer serializer = new JsonSerializer();
-                serializer.Formatting = Formatting.Indented;
-                using (StreamWriter writer = new StreamWriter(filename))
-                {
-                    serializer.Serialize(writer, infos);
+                    serializer.Serialize(writer, ii);
                 }
             }
 
-
-            TaskDialog.Show("Info", "Выгружено элементов: " + elemMaterials.Count.ToString());
+            TaskDialog.Show("Info", "Выгружено элементов: " + elementsCount.ToString());
             return Result.Succeeded;
         }
     }

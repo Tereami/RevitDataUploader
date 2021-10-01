@@ -50,7 +50,7 @@ namespace RevitDataUploader
 				.OfClass(typeof(FamilyInstance))
 				.OfCategory(BuiltInCategory.OST_GenericModel)
 				.Cast<FamilyInstance>()
-				.Where(i => i.Symbol.FamilyName.StartsWith("222")) //только гидроизоляция
+				.Where(i => Configuration.genericModelPrefixes.Contains(i.Symbol.FamilyName.Substring(0,3)))
 				.ToList();
 
 			elems.AddRange(genericModels);

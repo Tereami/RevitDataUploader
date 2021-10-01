@@ -22,15 +22,24 @@ namespace RevitDataUploader
 {
     public class ItemInfo
     {
-        public string Name { get; set; }
+        public string name { get; set; }
 
-        public string FileName { get; set; }
+        public string date { get; set; }
 
-        public double Quantity { get; set; }
+        public string fileName { get; set; }
 
-        public string Units { get; set; }
+        public string parentId { get; set; }
 
-        public List<ParameterInfo> Parameters { get; set; }
+        public int totalElements { get; set; }
+        public int counter { get; set; }
+
+        public string uniqueId { get; set; }
+
+
+        public Dictionary<string, string> Parameters { get; set; }
+        public Dictionary<string,string> InternalParameters { get; set; }
+
+        public List<ItemMaterialInfo> materials { get; set; }
 
 
         public ItemInfo()
@@ -40,43 +49,49 @@ namespace RevitDataUploader
 
         public ItemInfo(ElementMaterialInfo emi)
         {
-            Name = emi.FullName;
-            FileName = emi.ElemInfo.RevitElement.Document.Title;
-            Quantity = emi.Quantity;
+            name = emi.FullName;
+            date = DateTime.Now.ToString();
+            fileName = emi.ElemInfo.RevitElement.Document.Title;
+            materials = new List<ItemMaterialInfo>();
+            uniqueId = emi.ElemInfo.RevitUniqueElementId;
 
-            List<ParameterInfo> ps = new List<ParameterInfo>();
-            ps.Add(new ParameterInfo("RevitElementId", emi.ElemInfo.RevitElementId));
-            ps.Add(new ParameterInfo("RevitElementName", emi.ElemInfo.RevitElementName));
-            ps.Add(new ParameterInfo("RevitTypeName", emi.ElemInfo.RevitTypeName));
-            ps.Add(new ParameterInfo("RevitElementNormative", emi.ElemInfo.RevitElementNormative));
-            ps.Add(new ParameterInfo("RevitUniqueElementId", emi.ElemInfo.RevitUniqueElementId));
-            ps.Add(new ParameterInfo("LengthMeters", emi.ElemInfo.Length.ToString()));
-            ps.Add(new ParameterInfo("DiameterMm", emi.ElemInfo.Diameter.ToString()));
-            ps.Add(new ParameterInfo("Count", emi.ElemInfo.Count.ToString()));
-            ps.Add(new ParameterInfo("Mark", emi.ElemInfo.Mark));
-            ps.Add(new ParameterInfo("ConstructionName", emi.ElemInfo.ConstructionName));
-            ps.Add(new ParameterInfo("PlacementOrGroup", emi.ElemInfo.PlacementOrGroup));
-            ps.Add(new ParameterInfo("Category", emi.ElemInfo.Category));
+            if (emi.ElemInfo.HostElementId != null)
+                parentId = emi.ElemInfo.HostElementId.IntegerValue.ToString();
+            else
+                parentId = "";
 
-            ps.AddRange(emi.ElemInfo.CustomParameters);
+            Dictionary<string, string> tempParams = new Dictionary<string, string>();
+
+            tempParams.Add("quantity", emi.Quantity.ToString("F3"));
+            tempParams.Add("units", emi.MatInfo.Units);
+
+            tempParams.Add("revitElementId", emi.ElemInfo.RevitElementId);
+            tempParams.Add("revitElementName", emi.ElemInfo.RevitElementName);
+            tempParams.Add("revitTypeName", emi.ElemInfo.RevitTypeName);
+            tempParams.Add("revitElementNormative", emi.ElemInfo.RevitElementNormative);
+            
+            tempParams.Add("lengthMeters", emi.ElemInfo.Length.ToString());
+            tempParams.Add("diameterMm", emi.ElemInfo.Diameter.ToString());
+            tempParams.Add("count", emi.ElemInfo.Count.ToString());
+            tempParams.Add("mark", emi.ElemInfo.Mark);
+            tempParams.Add("constructionName", emi.ElemInfo.ConstructionName);
+            tempParams.Add("placementOrGroup", emi.ElemInfo.PlacementOrGroup);
+            tempParams.Add("categoryName", emi.ElemInfo.ElementCategory);
+            tempParams.Add("ostCategoryName", emi.ElemInfo.ElementCategoryInternal);
+
+            foreach (ParameterInfo pi in emi.ElemInfo.CustomParameters)
+            {
+                tempParams.Add(pi.Name, pi.Value);
+            }
 
             if (emi.MatInfo != null)
             {
-                if (emi.MatInfo.Material != null)
-                    ps.Add(new ParameterInfo("MaterialId", emi.MatInfo.Material.Id.IntegerValue.ToString()));
-
-                if (emi.MatInfo.Name != null)
-                    ps.Add(new ParameterInfo("MaterialName", emi.MatInfo.Name));
-
-                if (emi.MatInfo.Normative != null)
-                    ps.Add(new ParameterInfo("MaterialNormative", emi.MatInfo.Normative));
-
-                ps.Add(new ParameterInfo("MaterialCalcType", Enum.GetName(typeof(MaterialCalcType), emi.MatInfo.CalcType)));
-
-                if(emi.MatInfo.Units != null)
-                    Units = emi.MatInfo.Units;
+                ItemMaterialInfo imi = new ItemMaterialInfo(emi);
+                materials.Add(imi);
             }
-            Parameters = ps;
+            Parameters = tempParams;
+
+            InternalParameters = emi.ElemInfo.InternalParameters;
         }
     }
 }

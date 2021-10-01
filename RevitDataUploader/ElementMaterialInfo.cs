@@ -59,6 +59,7 @@ namespace RevitDataUploader
 
             FullName += ": " + matinfo.Name;
 
+
             switch (matinfo.CalcType)
             {
                 case MaterialCalcType.None:
@@ -71,10 +72,12 @@ namespace RevitDataUploader
                     break;
                 case MaterialCalcType.Area:
                     double area0 = elem.GetMaterialArea(matid, false);
+                    MatInfo.Area = area0;
                     Quantity = UnitUtils.ConvertFromInternalUnits(area0, DisplayUnitType.DUT_SQUARE_METERS);
                     break;
                 case MaterialCalcType.Volume:
                     double volume0 = elem.GetMaterialVolume(matid);
+                    MatInfo.Volume = volume0;
                     Quantity = UnitUtils.ConvertFromInternalUnits(volume0, DisplayUnitType.DUT_CUBIC_METERS);
                     break;
                 case MaterialCalcType.Weight:

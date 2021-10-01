@@ -44,9 +44,14 @@ namespace RevitDataUploader
         public string Mark { get; set; }
         public string ConstructionName { get; set; }
         public string PlacementOrGroup { get; set; }
-        public string Category { get; set; }
+        public string ElementCategory { get; set; }
+        public string ElementCategoryInternal { get; set; }
+        public string FamilyName { get; set; }
+
+        public ElementId HostElementId { get; set; }
 
         public List<ParameterInfo> CustomParameters = new List<ParameterInfo>();
+        public Dictionary<string, string> InternalParameters = new Dictionary<string, string>();
 
         public ElementInfo()
         {
@@ -65,7 +70,10 @@ namespace RevitDataUploader
             Diameter = elem.GetDiameter();
             Count = elem.GetCount();
 
+            ElementCategory = elem.Category.Name;
             BuiltInCategory bic = (BuiltInCategory)elem.Category.Id.IntegerValue;
+            ElementCategoryInternal = Enum.GetName(typeof(BuiltInCategory), bic);
+
 
 
             if (bic == BuiltInCategory.OST_Rebar)
@@ -95,6 +103,33 @@ namespace RevitDataUploader
                 ElementType elemType = elem.Document.GetElement(elem.GetTypeId()) as ElementType;
                 RevitTypeName = elemType.Name;
             }
+
+            foreach(Parameter p in elem.Parameters)
+            {
+                string paramnameInternal = p.GetParameterName();
+                string paramNameUser = p.Definition.Name;
+                string value = elem.GetParameterValAsString(paramNameUser);
+                InternalParameters.Add(paramnameInternal, value);
+            }
+
+            ElementId elemTypeId = elem.GetTypeId();
+            if(elemTypeId != null && elemTypeId != ElementId.InvalidElementId)
+            {
+                ElementType elemType = elem.Document.GetElement(elemTypeId) as ElementType;
+                if(elemType != null)
+                {
+                    foreach (Parameter p in elemType.Parameters)
+                    {
+                        string paramnameInternal = p.GetParameterName();
+                        string paramNameUser = p.Definition.Name;
+                        string value = elem.GetParameterValAsString(paramNameUser);
+                        if(!InternalParameters.ContainsKey(paramnameInternal))
+                            InternalParameters.Add(paramnameInternal, value);
+                    }
+                }
+            }
+
+            HostElementId = elem.SuperGetHostId();
 
             IsValid = true;
         }
