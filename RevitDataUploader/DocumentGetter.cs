@@ -25,7 +25,7 @@ namespace RevitDataUploader
 {
     public static class DocumentGetter
     {
-		public static IEnumerable<Element> GetConstructions(this Document doc)
+		public static IEnumerable<Element> GetConstructions(this Document doc, View main3dView)
         {
 			List<BuiltInCategory> cats = new List<BuiltInCategory>
 			{
@@ -40,12 +40,12 @@ namespace RevitDataUploader
 			ElementMulticategoryFilter constrsFilter =
 				new ElementMulticategoryFilter(cats);
 			
-			List<Element> elems = new FilteredElementCollector(doc, doc.GetMain3dView().Id)
+			List<Element> elems = new FilteredElementCollector(doc, main3dView.Id)
 				.WhereElementIsNotElementType()
 				.WherePasses(constrsFilter)
 				.ToList();
 
-			List<FamilyInstance> genericModels = new FilteredElementCollector(doc, doc.ActiveView.Id)
+			List<FamilyInstance> genericModels = new FilteredElementCollector(doc, doc.GetMain3dView().Id)
 				.WhereElementIsNotElementType()
 				.OfClass(typeof(FamilyInstance))
 				.OfCategory(BuiltInCategory.OST_GenericModel)
@@ -58,9 +58,9 @@ namespace RevitDataUploader
 			return elems;
 		}
 
-		public static IEnumerable<Element> GetRebars(this Document doc)
+		public static IEnumerable<Element> GetRebars(this Document doc, View main3dView)
         {
-			IEnumerable<Element> rebars0 = new FilteredElementCollector(doc, doc.GetMain3dView().Id)
+			IEnumerable<Element> rebars0 = new FilteredElementCollector(doc, main3dView.Id)
 				.WhereElementIsNotElementType()
 				.OfCategory(BuiltInCategory.OST_Rebar);
 

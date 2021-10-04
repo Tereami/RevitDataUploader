@@ -23,12 +23,10 @@ namespace RevitDataUploader
 {
     public enum ElementGroup { Concrete, Metal, Isolation, Rebar }
 
-    [Serializable]
     public class ElementInfo
     {
         public bool IsValid { get; set; }
 
-        [System.Xml.Serialization.XmlIgnore]
         public Element RevitElement { get; set; }
         public ElementGroup Group { get; set; }
 

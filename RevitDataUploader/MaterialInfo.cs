@@ -26,15 +26,25 @@ namespace RevitDataUploader
     [Serializable]
     public class MaterialInfo
     {
-        [System.Xml.Serialization.XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public Material Material { get; set; }
-        public string Name { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
         public MaterialCalcType CalcType { get; set; }
-        public string Normative { get; set; }
-        public string Units { get; set; }
+
+        public string Name { get; set; }
         public double Area { get; set; }
         public double Volume { get; set; }
-        public bool IsPaint { get; set; }
+        public bool IsPaintMaterial { get; set; }
+        public string Uniqueid { get; set; }
+        public int Id { get; set; }
+        public string fileName { get; set; }
+        public string Normative { get; set; }
+        public string Units { get; set; }
+
+        public int counter { get; set; }
+        public int totalElements { get; set; }
+        
+        public Dictionary<string, string> Parameters { get; set; }
 
         public MaterialInfo()
         {
@@ -48,20 +58,23 @@ namespace RevitDataUploader
             FilteredElementCollector col = new FilteredElementCollector(doc)
                 .OfClass(typeof(Material));
 
-            foreach (Element e in col)
+            foreach (Element mat in col)
             {
-                int id = e.Id.IntegerValue;
-                MaterialInfo info = new MaterialInfo();
-                info.Material = e as Material;
-                Parameter materialNameParam = e.LookupParameter(Configuration.MaterialName);
+                int id = mat.Id.IntegerValue;
+                MaterialInfo curMatInfo = new MaterialInfo();
+                curMatInfo.Material = mat as Material;
+                curMatInfo.Uniqueid = mat.UniqueId;
+                curMatInfo.Id = id;
+
+                Parameter materialNameParam = mat.LookupParameter(Configuration.MaterialName);
                 if (materialNameParam != null && materialNameParam.HasValue)
-                    info.Name = materialNameParam.AsString();
+                    curMatInfo.Name = materialNameParam.AsString();
                 else
-                    info.Name = e.Name;
+                    curMatInfo.Name = mat.Name;
 
-                info.Normative = e.GetParameterValAsString(Configuration.MaterialNormative);
+                curMatInfo.Normative = mat.GetParameterValAsString(Configuration.MaterialNormative);
 
-                Parameter calcTypeParam = e.LookupParameter(Configuration.MaterialCalcType);
+                Parameter calcTypeParam = mat.LookupParameter(Configuration.MaterialCalcType);
                 if (calcTypeParam != null && calcTypeParam.HasValue)
                 {
                     int calcTypeInt = calcTypeParam.AsInteger();
@@ -69,32 +82,43 @@ namespace RevitDataUploader
                     switch (calcTypeInt)
                     {
                         case 0:
-                            info.CalcType = MaterialCalcType.Items;
-                            info.Units = "шт";
+                            curMatInfo.CalcType = MaterialCalcType.Items;
+                            curMatInfo.Units = "шт";
                             break;
                         case 1:
-                            info.CalcType = MaterialCalcType.Length;
-                            info.Units = "м";
+                            curMatInfo.CalcType = MaterialCalcType.Length;
+                            curMatInfo.Units = "м";
                             break;
                         case 2:
-                            info.CalcType = MaterialCalcType.Area;
-                            info.Units = "м²";
+                            curMatInfo.CalcType = MaterialCalcType.Area;
+                            curMatInfo.Units = "м²";
                             break;
                         case 3:
-                            info.CalcType = MaterialCalcType.Volume;
-                            info.Units = "м³";
+                            curMatInfo.CalcType = MaterialCalcType.Volume;
+                            curMatInfo.Units = "м³";
                             break;
                         case 4:
-                            info.CalcType = MaterialCalcType.Weight;
-                            info.Units = "кг";
+                            curMatInfo.CalcType = MaterialCalcType.Weight;
+                            curMatInfo.Units = "кг";
                             break;
                         default:
-                            info.CalcType = MaterialCalcType.None;
-                            info.Units = "";
+                            curMatInfo.CalcType = MaterialCalcType.None;
+                            curMatInfo.Units = "";
                             break;
                     }
                 }
-                materials.Add(id, info);
+
+                curMatInfo.Parameters = new Dictionary<string, string>();
+                foreach (Parameter p in mat.Parameters)
+                {
+                    string paramnameInternal = p.GetParameterName();
+                    string paramNameUser = p.Definition.Name;
+                    string value = mat.GetParameterValAsString(paramNameUser);
+                    if(!curMatInfo.Parameters.ContainsKey(paramnameInternal))
+                        curMatInfo.Parameters.Add(paramnameInternal, value);
+                }
+
+                materials.Add(id, curMatInfo);
             }
             return materials;
         }

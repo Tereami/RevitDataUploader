@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,21 +24,18 @@ namespace RevitDataUploader
             Parameters = new Dictionary<string, string>();
 
             Name = emi.MatInfo.Name;
+            fileName = emi.ElemInfo.RevitElement.Document.Title;
             Area = emi.MatInfo.Area;
             Volume = emi.MatInfo.Volume;
             IsPaintMaterial = emi.MatInfo.IsPaint;
-            Uniqueid = emi.MatInfo.Material.UniqueId;
-            Id = emi.MatInfo.Material.Id.IntegerValue;
-            fileName = emi.ElemInfo.RevitElement.Document.Title;
-
-            foreach(Parameter p in emi.MatInfo.Material.ParametersMap)
+            Uniqueid = "";
+            Id = -1;
+            if (emi.MatInfo.Material != null)
             {
-                string paramnameInternal = p.GetParameterName();
-                string paramNameUser = p.Definition.Name;
-                string value = emi.MatInfo.Material.GetParameterValAsString(paramNameUser);
-                Parameters.Add(paramnameInternal, value);
+                
             }
         }
     }
 }
+*/
 
