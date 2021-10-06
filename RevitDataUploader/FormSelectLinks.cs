@@ -12,31 +12,26 @@ namespace RevitDataUploader
 {
     public partial class FormSelectLinks : Form
     {
-        public Dictionary<string, Autodesk.Revit.DB.RevitLinkInstance> selectedDocs;
-        private Dictionary<string, Autodesk.Revit.DB.RevitLinkInstance> allLinksBase;
+        public List<string> selectedDocs { get; set; }
 
-        public FormSelectLinks(Dictionary<string, Autodesk.Revit.DB.RevitLinkInstance> linksBase)
+        public FormSelectLinks(List<string> docNames)
         {
             InitializeComponent();
 
-            allLinksBase = linksBase;
-
-            List<string> docNames = linksBase.Keys.ToList();
             docNames.Sort();
             foreach(string title in docNames)
             {
-                checkedListBox1.Items.Add(title);
+                listBox1.Items.Add(title);
             }
         }
 
         private void buttonOk_Click(object sender, EventArgs e)
         {
-            selectedDocs = new Dictionary<string, Autodesk.Revit.DB.RevitLinkInstance>();
-            foreach(var row in checkedListBox1.SelectedItems)
+            selectedDocs = new List<string>();
+            foreach(var row in listBox1.SelectedItems)
             {
                 string curTitle = (string)row;
-                Autodesk.Revit.DB.RevitLinkInstance curLink = allLinksBase[curTitle];
-                selectedDocs.Add(curTitle, curLink);
+                selectedDocs.Add(curTitle);
             }
 
             this.DialogResult = DialogResult.OK;

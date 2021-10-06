@@ -38,30 +38,45 @@ namespace RevitDataUploader
                 .Cast<RevitLinkInstance>()
                 .ToList();
 
+            Dictionary<string, List<string>> linkInstancesNames = new Dictionary<string, List<string>>();
             if (linkInsts.Count > 0)
             {
-                Dictionary<string, RevitLinkInstance> linksBase = new Dictionary<string, RevitLinkInstance>();
+                Dictionary<string, List<RevitLinkInstance>> linkDocNames =
+                    new Dictionary<string, List<RevitLinkInstance>>();
+
                 foreach (RevitLinkInstance rli in linkInsts)
                 {
-                    string linkName = rli.Name;
-                    if (linkName.Contains(":"))
-                    {
-                        linkName = linkName.Split(':')[0].Trim();
-                    }
-                    if (!linksBase.ContainsKey(linkName))
-                        linksBase.Add(linkName, rli);
+                    string linkDocName = rli.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString();
+                    if (linkDocName.EndsWith(".rvt"))
+                        linkDocName = linkDocName.Replace(".rvt", "");
+
+                    if (linkDocNames.ContainsKey(linkDocName))
+                        linkDocNames[linkDocName].Add(rli);
+                    else
+                        linkDocNames[linkDocName] = new List<RevitLinkInstance> { rli };
                 }
 
-                FormSelectLinks formLinks = new FormSelectLinks(linksBase);
+
+                FormSelectLinks formLinks = new FormSelectLinks(linkDocNames.Keys.ToList());
                 if (formLinks.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                     return Result.Cancelled;
 
-
-                foreach (var kvp in formLinks.selectedDocs)
+                foreach (string docName in formLinks.selectedDocs)
                 {
-                    RevitLinkInstance rli = kvp.Value;
-                    Document linkDoc = rli.GetLinkDocument();
+                    List<RevitLinkInstance> curLinks = linkDocNames[docName];
+                    Document linkDoc = curLinks[0].GetLinkDocument();
                     docs.Add(linkDoc);
+
+                    if (curLinks.Count == 1) continue;
+
+                    foreach (RevitLinkInstance rli in curLinks)
+                    {
+                        string linkInstanceName = rli.get_Parameter(BuiltInParameter.RVT_LINK_INSTANCE_NAME).AsString();
+                        if (linkInstancesNames.ContainsKey(docName))
+                            linkInstancesNames[docName].Add(linkInstanceName);
+                        else
+                            linkInstancesNames.Add(docName, new List<string> { linkInstanceName });
+                    }
                 }
             }
 
@@ -81,35 +96,22 @@ namespace RevitDataUploader
                 View main3dView = doc.GetMain3dView();
                 Dictionary<int, MaterialInfo> materialsBase = MaterialInfo.GetAllMaterials(doc);
 
-                View3D mainView = doc.GetMain3dView();
-
                 Dictionary<int, ElementInfo> elementsBase = new Dictionary<int, ElementInfo>();
 
                 IEnumerable<Element> constructions = doc.GetConstructions(main3dView);
                 foreach (Element constr in constructions)
                 {
-                    ElementInfo einfo = new ElementInfo(constr);
-                    if (!einfo.IsValid)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Invalid element " + constr.Id.IntegerValue.ToString());
-                        continue;
-                    }
-
-                    elementsBase.Add(constr.Id.IntegerValue, einfo);
+                    ElementInfo ei = new ElementInfo(constr);
+                    elementsBase.Add(constr.Id.IntegerValue, ei);
                 }
 
                 IEnumerable<Element> rebars = doc.GetRebars(main3dView);
                 foreach (Element rebar in rebars)
                 {
                     ElementInfo einfo = new ElementInfo(rebar);
-                    if (!einfo.IsValid)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Invalid element " + rebar.Id.IntegerValue.ToString());
-                        continue;
-                    }
-
                     elementsBase.Add(rebar.Id.IntegerValue, einfo);
                 }
+
 
                 List<CustomParameterData> customParamsData = CustomParameterData.GetCustomParamsData(doc);
                 foreach (CustomParameterData cpdata in customParamsData)
@@ -125,10 +127,35 @@ namespace RevitDataUploader
                     }
                 }
 
+
+                List<ElementInfo> infos = new List<ElementInfo>();
+                string docTitle = doc.Title;
                 foreach (var kvp in elementsBase)
                 {
-                    ElementInfo einfo = kvp.Value;
+                    ElementInfo ei = kvp.Value;
+                    int elemId = ei.RevitElement.Id.IntegerValue;
+                    if (linkInstancesNames.ContainsKey(docTitle))
+                    {
+                        List<string> blockNames = linkInstancesNames[docTitle];
+                        foreach (string blockName in blockNames)
+                        {
+                            ElementInfo cloneEi = (ElementInfo)ei.Clone();
+                            ParameterInfo blockPi = new ParameterInfo(Configuration.BlockParamName, "Блок №" + blockName);
+                            cloneEi.CustomParameters = ei.CustomParameters.ToList();
+                            cloneEi.CustomParameters.Add(blockPi);
+                            cloneEi.Mark += blockName;
+                            infos.Add(cloneEi);
+                        }
+                    }
+                    else
+                    {
+                        infos.Add(ei);
+                    }
+                }
 
+
+                foreach (ElementInfo einfo in infos)
+                {
                     if (einfo.Group == ElementGroup.Rebar)
                     {
                         ElementMaterialInfo elemMaterial = new ElementMaterialInfo(einfo);

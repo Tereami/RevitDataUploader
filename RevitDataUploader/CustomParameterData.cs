@@ -50,7 +50,7 @@ namespace RevitDataUploader
                 CustomParameterData customdata = new CustomParameterData();
                 customdata.View = view;
 
-                string splitName = view.Name.Split('_').Last();
+                string splitName = view.Name.Split('#').Last();
                 string[] splitParam = splitName.Split('=');
 
                 customdata.customParam = new ParameterInfo( splitParam[0], splitParam[1]);

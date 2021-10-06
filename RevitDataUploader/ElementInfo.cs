@@ -23,7 +23,7 @@ namespace RevitDataUploader
 {
     public enum ElementGroup { Concrete, Metal, Isolation, Rebar }
 
-    public class ElementInfo
+    public class ElementInfo : ICloneable
     {
         public bool IsValid { get; set; }
 
@@ -73,7 +73,6 @@ namespace RevitDataUploader
             ElementCategoryInternal = Enum.GetName(typeof(BuiltInCategory), bic);
 
 
-
             if (bic == BuiltInCategory.OST_Rebar)
                 Group = ElementGroup.Rebar;
             else if (elem is RoofBase)
@@ -107,7 +106,8 @@ namespace RevitDataUploader
                 string paramnameInternal = p.GetParameterName();
                 string paramNameUser = p.Definition.Name;
                 string value = elem.GetParameterValAsString(paramNameUser);
-                InternalParameters.Add(paramnameInternal, value);
+                if(!InternalParameters.ContainsKey(paramnameInternal))
+                    InternalParameters.Add(paramnameInternal, value);
             }
 
             ElementId elemTypeId = elem.GetTypeId();
@@ -130,6 +130,11 @@ namespace RevitDataUploader
             HostElementId = elem.SuperGetHostId();
 
             IsValid = true;
+        }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
         }
     }
 }

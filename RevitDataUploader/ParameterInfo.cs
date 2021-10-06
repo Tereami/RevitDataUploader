@@ -1,4 +1,4 @@
-﻿#region License
+﻿ #region License
 /*Данный код опубликован под лицензией Creative Commons Attribution-ShareAlike.
 Разрешено использовать, распространять, изменять и брать данный код за основу для производных в коммерческих и
 некоммерческих целях, при условии указания авторства и если производные лицензируются на тех же условиях.
@@ -24,6 +24,7 @@ namespace RevitDataUploader
     {
         public string Name { get; set; }
         public string Value { get; set; }
+        public int UnitCode { get; set; }
 
         public ParameterInfo()
         {
@@ -37,3 +38,4 @@ namespace RevitDataUploader
         }
     }
 }
+

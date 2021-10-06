@@ -30,6 +30,8 @@ namespace RevitDataUploader
         public Material Material { get; set; }
         [Newtonsoft.Json.JsonIgnore]
         public MaterialCalcType CalcType { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
+        public string Units { get; set; }
 
         public string Name { get; set; }
         public double Area { get; set; }
@@ -37,12 +39,8 @@ namespace RevitDataUploader
         public bool IsPaintMaterial { get; set; }
         public string Uniqueid { get; set; }
         public int Id { get; set; }
-        public string fileName { get; set; }
         public string Normative { get; set; }
-        public string Units { get; set; }
-
-        public int counter { get; set; }
-        public int totalElements { get; set; }
+        
         
         public Dictionary<string, string> Parameters { get; set; }
 

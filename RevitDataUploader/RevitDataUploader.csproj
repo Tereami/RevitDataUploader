@@ -64,8 +64,6 @@
       <DependentUpon>FormSelectLinks.cs</DependentUpon>
     </Compile>
     <Compile Include="HostUtils.cs" />
-    <Compile Include="ItemInfo.cs" />
-    <Compile Include="ItemMaterialInfo.cs" />
     <Compile Include="ParameterInfo.cs" />
     <Compile Include="CustomParameterData.cs" />
     <Compile Include="DocumentGetter.cs" />

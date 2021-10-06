@@ -34,11 +34,11 @@ namespace RevitDataUploader
         public int totalElements { get; set; }
         public int counter { get; set; }
 
-        public Dictionary<string, string> Parameters { get; set; }
-        public Dictionary<string, string> InternalParameters { get; set; }
+        public Dictionary<string, string> parameters2 { get; set; }
+        public Dictionary<string, string> parameters { get; set; }
 
         
-        public List<MaterialInfo> MatInfos { get; set; }
+        public List<MaterialInfo> materials { get; set; }
 
         [Newtonsoft.Json.JsonIgnore]
         public ElementInfo elemInfo;
@@ -51,7 +51,7 @@ namespace RevitDataUploader
         public ElementMaterialInfo(ElementInfo einfo)
         {
             elemInfo = einfo;
-            MatInfos = new List<MaterialInfo>();
+            materials = new List<MaterialInfo>();
 
             date = DateTime.Now.ToString();
             fileName = einfo.RevitElement.Document.Title;
@@ -61,30 +61,29 @@ namespace RevitDataUploader
             else
                 parentId = "";
 
-            InternalParameters = einfo.InternalParameters;
-            Parameters = new Dictionary<string, string>();
-
-            //Parameters.Add("quantity", Quantity.ToString("F3"));
+            parameters = einfo.InternalParameters;
+            parameters2 = new Dictionary<string, string>();
             
 
-            Parameters.Add("revitElementId", einfo.RevitElementId);
-            Parameters.Add("revitElementName", einfo.RevitElementName);
-            Parameters.Add("revitTypeName", einfo.RevitTypeName);
-            Parameters.Add("revitElementNormative", einfo.RevitElementNormative);
+            parameters2.Add("revitElementId", einfo.RevitElementId);
+            parameters2.Add("revitElementName", einfo.RevitElementName);
+            parameters2.Add("revitTypeName", einfo.RevitTypeName);
+            parameters2.Add("revitElementNormative", einfo.RevitElementNormative);
 
-            Parameters.Add("lengthMeters", einfo.Length.ToString());
-            Parameters.Add("diameterMm", einfo.Diameter.ToString());
-            Parameters.Add("count", einfo.Count.ToString());
-            Parameters.Add("mark", einfo.Mark);
-            Parameters.Add("constructionName", einfo.ConstructionName);
-            Parameters.Add("placementOrGroup", einfo.PlacementOrGroup);
-            Parameters.Add("categoryName", einfo.ElementCategory);
-            Parameters.Add("ostCategoryName", einfo.ElementCategoryInternal);
+            parameters2.Add("lengthMeters", einfo.Length.ToString());
+            parameters2.Add("diameterMm", einfo.Diameter.ToString());
+            parameters2.Add("count", einfo.Count.ToString());
+            parameters2.Add("mark", einfo.Mark);
+            parameters2.Add("constructionName", einfo.ConstructionName);
+            parameters2.Add("placementOrGroup", einfo.PlacementOrGroup);
+            parameters2.Add("categoryName", einfo.ElementCategory);
+            parameters2.Add("ostCategoryName", einfo.ElementCategoryInternal);
 
             foreach (ParameterInfo pi in einfo.CustomParameters)
             {
-                Parameters.Add(pi.Name, pi.Value);
+                parameters2.Add(pi.Name, pi.Value);
             }
+
 
 
 
@@ -106,7 +105,7 @@ namespace RevitDataUploader
             Element e = elemInfo.RevitElement;
 
             name += ": " + matinfo.Name;
-            Parameters.Add("units", matinfo.Units);
+            
 
             double qt = 0;
             switch (matinfo.CalcType)
@@ -136,9 +135,10 @@ namespace RevitDataUploader
             }
             
             qt = Math.Round(qt, 3);
-            Parameters.Add("quantity", qt.ToString("F3"));
+            parameters2.Add("quantity", qt.ToString("F3"));
+            parameters2.Add("units", matinfo.Units);
 
-            MatInfos.Add(matinfo);
+            materials.Add(matinfo);
         }
 
         public void ApplyRebar(Dictionary<int, MaterialInfo> materialsBase)
@@ -191,9 +191,9 @@ namespace RevitDataUploader
             }
 
             double weight = RebarUtils.GetRebarWeight(elemInfo, armClass);
-            Parameters.Add("quantity", weight.ToString("F3"));
-            matInfo.Units = "кг";
-            MatInfos.Add(matInfo);
+            parameters2.Add("quantity", weight.ToString("F3"));
+            parameters2.Add("units", "кг");
+            materials.Add(matInfo);
         }
 
         public void ApplyMetal()
