@@ -32,7 +32,7 @@ namespace RevitDataUploader
 
         public string RevitElementName { get; set; }
         public string RevitTypeName { get; set; }
-        public string RevitElementId { get; set; }
+        public int RevitElementId { get; set; }
         public string RevitElementNormative { get; set; }
         public string RevitUniqueElementId { get; set; }
         public string Units { get; set; }
@@ -46,9 +46,11 @@ namespace RevitDataUploader
         public string ElementCategoryInternal { get; set; }
         public string FamilyName { get; set; }
 
+        //public int Multiplier = 1;
+
         public ElementId HostElementId { get; set; }
 
-        public List<ParameterInfo> CustomParameters = new List<ParameterInfo>();
+        public Dictionary<string, string> CustomParameters = new Dictionary<string, string>();
         public Dictionary<string, string> InternalParameters = new Dictionary<string, string>();
 
         public ElementInfo()
@@ -59,7 +61,7 @@ namespace RevitDataUploader
         public ElementInfo(Element elem)
         {
             RevitElement = elem;
-            RevitElementId = elem.Id.IntegerValue.ToString();
+            RevitElementId = elem.Id.IntegerValue;
             RevitElementNormative = elem.GetParameterValAsString(Configuration.ElementNorvative);
 
             RevitUniqueElementId = elem.UniqueId;
@@ -67,6 +69,10 @@ namespace RevitDataUploader
             Length = elem.GetLength();
             Diameter = elem.GetDiameter();
             Count = elem.GetCount();
+            
+            int multiplier = elem.GetMultiplier();
+            if (multiplier > 1)
+                Count = Count * multiplier;
 
             ElementCategory = elem.Category.Name;
             BuiltInCategory bic = (BuiltInCategory)elem.Category.Id.IntegerValue;

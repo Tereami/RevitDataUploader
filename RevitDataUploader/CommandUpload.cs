@@ -38,45 +38,31 @@ namespace RevitDataUploader
                 .Cast<RevitLinkInstance>()
                 .ToList();
 
-            Dictionary<string, List<string>> linkInstancesNames = new Dictionary<string, List<string>>();
+            List<LinkInstanceInfo> linkInstances = new List<LinkInstanceInfo>();
             if (linkInsts.Count > 0)
             {
-                Dictionary<string, List<RevitLinkInstance>> linkDocNames =
-                    new Dictionary<string, List<RevitLinkInstance>>();
-
                 foreach (RevitLinkInstance rli in linkInsts)
                 {
-                    string linkDocName = rli.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString();
-                    if (linkDocName.EndsWith(".rvt"))
-                        linkDocName = linkDocName.Replace(".rvt", "");
-
-                    if (linkDocNames.ContainsKey(linkDocName))
-                        linkDocNames[linkDocName].Add(rli);
-                    else
-                        linkDocNames[linkDocName] = new List<RevitLinkInstance> { rli };
+                    LinkInstanceInfo lii = new LinkInstanceInfo(rli);
+                    linkInstances.Add(lii);
                 }
 
+                List<string> docTitles = linkInstances
+                    .Select(i => i.DocTitle)
+                    .Distinct()
+                    .ToList();
 
-                FormSelectLinks formLinks = new FormSelectLinks(linkDocNames.Keys.ToList());
+                FormSelectLinks formLinks = new FormSelectLinks(docTitles);
                 if (formLinks.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                     return Result.Cancelled;
 
                 foreach (string docName in formLinks.selectedDocs)
                 {
-                    List<RevitLinkInstance> curLinks = linkDocNames[docName];
-                    Document linkDoc = curLinks[0].GetLinkDocument();
+                    List<LinkInstanceInfo> curLinks = linkInstances
+                        .Where(i => i.DocTitle == docName)
+                        .ToList();
+                    Document linkDoc = curLinks[0].RevitLinkInst.GetLinkDocument();
                     docs.Add(linkDoc);
-
-                    if (curLinks.Count == 1) continue;
-
-                    foreach (RevitLinkInstance rli in curLinks)
-                    {
-                        string linkInstanceName = rli.get_Parameter(BuiltInParameter.RVT_LINK_INSTANCE_NAME).AsString();
-                        if (linkInstancesNames.ContainsKey(docName))
-                            linkInstancesNames[docName].Add(linkInstanceName);
-                        else
-                            linkInstancesNames.Add(docName, new List<string> { linkInstanceName });
-                    }
                 }
             }
 
@@ -96,65 +82,63 @@ namespace RevitDataUploader
                 View main3dView = doc.GetMain3dView();
                 Dictionary<int, MaterialInfo> materialsBase = MaterialInfo.GetAllMaterials(doc);
 
-                Dictionary<int, ElementInfo> elementsBase = new Dictionary<int, ElementInfo>();
+                List<ElementInfo> elementsBase = new List<ElementInfo>();
 
                 IEnumerable<Element> constructions = doc.GetConstructions(main3dView);
                 foreach (Element constr in constructions)
                 {
-                    ElementInfo ei = new ElementInfo(constr);
-                    elementsBase.Add(constr.Id.IntegerValue, ei);
+                    elementsBase.Add(new ElementInfo(constr));
                 }
 
                 IEnumerable<Element> rebars = doc.GetRebars(main3dView);
                 foreach (Element rebar in rebars)
                 {
-                    ElementInfo einfo = new ElementInfo(rebar);
-                    elementsBase.Add(rebar.Id.IntegerValue, einfo);
+                    elementsBase.AddRange(rebar.GetRebarInfos());
                 }
 
-
-                List<CustomParameterData> customParamsData = CustomParameterData.GetCustomParamsData(doc);
-                foreach (CustomParameterData cpdata in customParamsData)
+                Dictionary<int, Dictionary<string, string>> elemIdsAndCustomParams = CustomParameterData.GetCustomParamsData(doc);
+                foreach (ElementInfo ei in elementsBase)
                 {
-                    ParameterInfo cp = cpdata.customParam;
-                    foreach (Element elem in cpdata.Elements)
+                    if (!elemIdsAndCustomParams.ContainsKey(ei.RevitElementId))
+                        continue;
+
+                    foreach (KeyValuePair<string, string> customParam in elemIdsAndCustomParams[ei.RevitElementId])
                     {
-                        int elemId = elem.Id.IntegerValue;
-                        if (elementsBase.ContainsKey(elemId))
-                        {
-                            elementsBase[elemId].CustomParameters.Add(cp);
-                        }
+                        if (!ei.CustomParameters.ContainsKey(customParam.Key))
+                            ei.CustomParameters.Add(customParam.Key, customParam.Value);
                     }
                 }
 
 
-                List<ElementInfo> infos = new List<ElementInfo>();
-                string docTitle = doc.Title;
-                foreach (var kvp in elementsBase)
+
+                //клонирую элементы по экземплярам связей
+                List<ElementInfo> elemInfosClonedByFloorsAndBlocks = new List<ElementInfo>();
+                string docTitle = doc.GetTitleWithoutExtension();
+                foreach (ElementInfo ei in elementsBase)
                 {
-                    ElementInfo ei = kvp.Value;
                     int elemId = ei.RevitElement.Id.IntegerValue;
-                    if (linkInstancesNames.ContainsKey(docTitle))
+
+                    List<LinkInstanceInfo> curLinks = linkInstances
+                        .Where(i => i.DocTitle == docTitle)
+                        .ToList();
+
+                    if (curLinks.Count == 0)
                     {
-                        List<string> blockNames = linkInstancesNames[docTitle];
-                        foreach (string blockName in blockNames)
-                        {
-                            ElementInfo cloneEi = (ElementInfo)ei.Clone();
-                            ParameterInfo blockPi = new ParameterInfo(Configuration.BlockParamName, "Блок №" + blockName);
-                            cloneEi.CustomParameters = ei.CustomParameters.ToList();
-                            cloneEi.CustomParameters.Add(blockPi);
-                            cloneEi.Mark += blockName;
-                            infos.Add(cloneEi);
-                        }
+                        elemInfosClonedByFloorsAndBlocks.Add(ei);
+                        continue;
                     }
-                    else
+
+                    foreach (LinkInstanceInfo lii in curLinks)
                     {
-                        infos.Add(ei);
+                        if (string.IsNullOrEmpty(lii.LinkName))
+                            elemInfosClonedByFloorsAndBlocks.Add(ei);
+                        else
+                            elemInfosClonedByFloorsAndBlocks.Add(lii.CloneElemInfoByLink(ei));
                     }
                 }
 
-
-                foreach (ElementInfo einfo in infos)
+                //назначаю материалы для элементов
+                foreach (ElementInfo einfo in elemInfosClonedByFloorsAndBlocks)
                 {
                     if (einfo.Group == ElementGroup.Rebar)
                     {

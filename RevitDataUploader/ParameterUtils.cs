@@ -26,7 +26,6 @@ namespace RevitDataUploader
     {
         public static Parameter SuperGetParameter(this Element Elem, string ParamName)
         {
-
             Parameter param = Elem.LookupParameter(ParamName);
             if (param == null)
             {
@@ -34,6 +33,15 @@ namespace RevitDataUploader
                 param = eltype.LookupParameter(ParamName);
             }
             return param;
+        }
+
+        public static int GetMultiplier(this Element elem)
+        {
+            int multiplier = 1;
+            Parameter mp = elem.LookupParameter(Configuration.MultiplierParamName);
+            if (mp != null && mp.HasValue)
+                multiplier = (int)mp.AsDouble();
+            return multiplier;
         }
 
         public static string GetParameterName(this Parameter p)

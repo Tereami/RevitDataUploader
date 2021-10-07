@@ -25,18 +25,18 @@ namespace RevitDataUploader
 {
     public class CustomParameterData
     {
-        public ParameterInfo customParam;
-        public View3D View;
-        public IEnumerable<Element> Elements;
+        //public ParameterInfo customParam;
+        //public View3D View;
+        //public IEnumerable<Element> Elements;
 
-        public static List<CustomParameterData> GetCustomParamsData(Document doc)
+        public static Dictionary<int, Dictionary<string,string>> GetCustomParamsData(Document doc)
         {
-            List<CustomParameterData> data = new List<CustomParameterData>();
+            Dictionary<int, Dictionary<string, string>> data = new Dictionary<int, Dictionary<string, string>>();
 
             List<View3D> views = new FilteredElementCollector(doc)
                 .OfClass(typeof(View3D))
                 .Cast<View3D>()
-                .Where(i => i.Name.StartsWith("RevitDataUploader_") && i.Name.Contains("="))
+                .Where(i => i.Name.StartsWith("RevitDataUploader#") && i.Name.Contains("="))
                 .ToList();
 
             if(views.Count == 0)
@@ -47,18 +47,29 @@ namespace RevitDataUploader
                 if (view.DetailLevel != ViewDetailLevel.Fine)
                     throw new Exception("Установите Высокую детализацию для вида " + view.Name);
 
-                CustomParameterData customdata = new CustomParameterData();
-                customdata.View = view;
+                //CustomParameterData customdata = new CustomParameterData();
+                //customdata.View = view;
 
                 string splitName = view.Name.Split('#').Last();
                 string[] splitParam = splitName.Split('=');
 
-                customdata.customParam = new ParameterInfo( splitParam[0], splitParam[1]);
+                List<int> curViewElemIds = new FilteredElementCollector(doc, view.Id)
+                    .WhereElementIsNotElementType()
+                    .ToElementIds()
+                    .Select(e => e.IntegerValue)
+                    .ToList();
 
-                customdata.Elements = new FilteredElementCollector(doc, view.Id)
-                    .WhereElementIsNotElementType();
-                
-                data.Add(customdata);
+                foreach(int elemid in curViewElemIds)
+                {
+                    if (data.ContainsKey(elemid))
+                        data[elemid].Add(splitParam[0], splitParam[1]);
+                    else
+                    {
+                        Dictionary<string, string> newValue = new Dictionary<string, string>();
+                        newValue.Add(splitParam[0], splitParam[1]);
+                        data.Add(elemid, newValue);
+                    }
+                }
             }
 
             return data;

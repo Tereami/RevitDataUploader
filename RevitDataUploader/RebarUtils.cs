@@ -23,6 +23,44 @@ namespace RevitDataUploader
 {
     public static class RebarUtils
     {
+        public static List<ElementInfo> GetRebarInfos (this Element rebar)
+        {
+            List<ElementInfo> infos = new List<ElementInfo>();
+            ElementInfo rebarEi = new ElementInfo(rebar);
+
+            Parameter rebarGroupParam = rebar.LookupParameter(Configuration.RebarGroupParamName);
+            if (rebarGroupParam != null && rebarGroupParam.HasValue)
+            {
+                string rebarGroup = rebarGroupParam.AsString();
+                if (rebarGroup.Contains("№"))
+                {
+                    string rebarGroupBlocks = rebarGroup.Split('№').Last();
+                    if (rebarGroupBlocks.Contains(","))
+                    {
+                        string[] rebarBlocksArray = rebarGroupBlocks.Split(',');
+                        foreach (string block in rebarBlocksArray)
+                        {
+                            ElementInfo cloneRebarEi = (ElementInfo)rebarEi.Clone();
+                            cloneRebarEi.CustomParameters = new Dictionary<string, string>();
+                            cloneRebarEi.CustomParameters.Add(Configuration.BlockParamName, "Блок №" + block);
+                            infos.Add(cloneRebarEi);
+                        }
+                        return infos;
+                    }
+                    else
+                    {
+                        rebarEi.CustomParameters = new Dictionary<string, string>();
+                        rebarEi.CustomParameters.Add(Configuration.BlockParamName, "Блок №" + rebarGroupBlocks);
+                        infos.Add(rebarEi);
+                        return infos;
+                    }
+                }
+            }
+
+            infos.Add(rebarEi);
+            return infos;
+        }
+
         public static double GetRebarWeight(ElementInfo einfo, long RebarClass)
         {
             Element elem = einfo.RevitElement;

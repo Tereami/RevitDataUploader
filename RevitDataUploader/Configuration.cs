@@ -38,6 +38,9 @@ namespace RevitDataUploader
         public const string WeightPerMeter = "О_МассаПогМетра";
 
         public const string BlockParamName = "СМ_Блок";
+        public const string RebarGroupParamName = "Арм.Группа ВРС";
+        public const string FloorParamName = "СМ_Этаж";
+        public const string MultiplierParamName = "Орг.МножительКоличества";
 
 
         public static Dictionary<string, string> markBase = new Dictionary<string, string> { 

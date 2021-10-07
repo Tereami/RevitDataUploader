@@ -65,7 +65,7 @@ namespace RevitDataUploader
             parameters2 = new Dictionary<string, string>();
             
 
-            parameters2.Add("revitElementId", einfo.RevitElementId);
+            parameters2.Add("revitElementId", einfo.RevitElementId.ToString());
             parameters2.Add("revitElementName", einfo.RevitElementName);
             parameters2.Add("revitTypeName", einfo.RevitTypeName);
             parameters2.Add("revitElementNormative", einfo.RevitElementNormative);
@@ -79,12 +79,11 @@ namespace RevitDataUploader
             parameters2.Add("categoryName", einfo.ElementCategory);
             parameters2.Add("ostCategoryName", einfo.ElementCategoryInternal);
 
-            foreach (ParameterInfo pi in einfo.CustomParameters)
+            foreach (var kvp in einfo.CustomParameters)
             {
-                parameters2.Add(pi.Name, pi.Value);
+                if(!parameters2.ContainsKey(kvp.Key))
+                    parameters2.Add(kvp.Key, kvp.Value);
             }
-
-
 
 
             name = einfo.ConstructionName;

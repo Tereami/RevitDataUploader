@@ -83,6 +83,14 @@ namespace RevitDataUploader
 			return rebars;
 		}
 
+		public static string GetTitleWithoutExtension(this Document doc)
+        {
+			string docTitle = doc.Title;
+			if (docTitle.EndsWith(".rvt"))
+				docTitle = docTitle.Replace(".rvt", "");
+			return docTitle;
+		}
+
 		public static View3D GetMain3dView(this Document doc)
         {
 			List<View3D> views = new FilteredElementCollector(doc)
