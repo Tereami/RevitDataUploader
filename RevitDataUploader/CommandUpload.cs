@@ -31,13 +31,11 @@ namespace RevitDataUploader
         {
             Document mainDoc = commandData.Application.ActiveUIDocument.Document;
 
-            List<ElementMaterialInfo> elemMaterials = 
-                RevitDataUploader.Connector.GetStructureData(mainDoc);
+            List<ElementMaterialInfo> elemMaterials = RevitDataUploader.Connector.GetStructureData(mainDoc);
 
 
-            System.Windows.Forms.SaveFileDialog dialog = 
-                new System.Windows.Forms.SaveFileDialog();
-            dialog.FileName = mainDoc.Title + ".json";
+            System.Windows.Forms.SaveFileDialog dialog = new System.Windows.Forms.SaveFileDialog();
+            dialog.FileName = mainDoc.GetTitleWithoutExtension() + ".json";
             dialog.Filter = "JSON files|*.json";
 
             if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
@@ -45,13 +43,19 @@ namespace RevitDataUploader
 
             JsonSerializer serializer = new JsonSerializer();
             serializer.Formatting = Formatting.Indented;
+            
+
+           
 
 
-            int elementsCount = 0;
+            int elementsCount = elemMaterials.Count;
             string folder = System.IO.Path.GetDirectoryName(dialog.FileName);
             for (int i = 0; i < elemMaterials.Count; i++)
             {
                 ElementMaterialInfo emi = elemMaterials[i];
+                emi.counter = i;
+                emi.totalElements = elementsCount;
+
                 string docTitle = emi.fileName;
                 string filename = System.IO.Path.Combine(folder, docTitle + "_" + emi.uniqueId + ".json");
 
@@ -65,7 +69,6 @@ namespace RevitDataUploader
                 using (StreamWriter writer = new StreamWriter(filename))
                 {
                     serializer.Serialize(writer, emi);
-                    elementsCount++;
                 }
             }
 

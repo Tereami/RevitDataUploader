@@ -54,7 +54,7 @@ namespace RevitDataUploader
             materials = new List<MaterialInfo>();
 
             date = DateTime.Now.ToString();
-            fileName = einfo.RevitElement.Document.Title;
+            //fileName = einfo.RevitElement.Document.GetTitleWithoutExtension();
             uniqueId = einfo.RevitUniqueElementId;
             if (einfo.HostElementId != null)
                 parentId = einfo.HostElementId.IntegerValue.ToString();

@@ -16,6 +16,7 @@ namespace RevitDataUploader
         /// <returns>Список элементов модели, подготовленный для сериализации. Null если действие было отменено.</returns>
         public static List<ElementMaterialInfo> GetStructureData(Document mainDoc)
         {
+            string mainDocTitle = mainDoc.GetTitleWithoutExtension();
             List<Document> docs = new List<Document> { mainDoc };
 
             List<RevitLinkInstance> linkInsts = new FilteredElementCollector(mainDoc)
@@ -155,12 +156,12 @@ namespace RevitDataUploader
                 }
 
                 int elementsCount = elemMaterials.Count;
-                for (int i = 0; i < elemMaterials.Count; i++)
+                for (int i = 1; i <= elementsCount; i++)
                 {
                     ElementMaterialInfo emi = elemMaterials[i];
                     emi.counter = i;
                     emi.totalElements = elementsCount;
-
+                    emi.fileName = mainDocTitle;
                 }
             }
             return elemMaterials;
