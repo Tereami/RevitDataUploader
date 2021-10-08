@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="CommandUpload.cs" />
+    <Compile Include="Connector.cs" />
     <Compile Include="FormSelectLinks.cs">
       <SubType>Form</SubType>
     </Compile>
